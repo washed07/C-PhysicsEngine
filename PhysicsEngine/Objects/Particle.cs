@@ -99,6 +99,7 @@ public class Accumulator
 
     public Num radius; // Radius of emitted particles
     public Num amount; // Amount of particles to emit
+    public Num currentAmount; // Current amount of particles emitted
     public Num lifeTime; // Lifetime of emitted particles
     public Vect vel; // Velocity of emitted particles
 
@@ -121,7 +122,7 @@ public class Accumulator
         
     )
     {   
-        if (engine.Particles.Count() < Amount)
+        if (currentAmount < Amount)
         {
             if (IsRandom == true) 
             {
@@ -149,6 +150,7 @@ public class Accumulator
                 } else {vel = Vel;}
             }
             CreateParticle(polygon, Mass, radius, lifeTime, vel);
+            currentAmount++;
         }
     }
 

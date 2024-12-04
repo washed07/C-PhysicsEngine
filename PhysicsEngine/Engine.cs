@@ -1,7 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Drawing;
-using System.Windows;
-using System.Windows.Input;
 using Microsoft.Xna.Framework.Input;
 using Physics.Particles;
 using Shapes;
@@ -31,9 +28,9 @@ namespace Physics
         {
             physics = new Physics(this);
 
-            accumulator = new Accumulator(this, (500, 500), Physics.Laws.Global);
+            accumulator = new Accumulator(this, (500, 600), Physics.Laws.Global);
 
-            Particles.Add(new Particle(CreateShape.Square(20, 20), Physics.Laws.None, -1f, 10f, 1f, (500, 400), 1f));
+            Particles.Add(new Particle(CreateShape.Square(20, 20), Physics.Laws.None, -1f, 10f, 1e18, (500, 400), 1f)); // Massive masses attratction only works from 1e17 to 1e18. 
             //Particles.Add(new Particle(Shape.Square(20, 20), Motion.Static, Laws.None, -1f, 10f, 10000f, (600, 400), 1f));
             //Particles.Add(new Particle(Shape.Square(20, 20), Motion.Static, Laws.None, -1f, 10f, 10000f, (500, 300), 1f));
             //Particles.Add(new Particle(Shape.Square(20, 20), Motion.Static, Laws.None, -1f, 10f, 100f, (500, 500), 1f));
@@ -66,10 +63,9 @@ namespace Physics
                     accumulator.Emit 
                     (
                         true, 
-                        2f, 
+                        100f, 
                         CreateShape.IsoTriangle(30, 30), 
-                        0.5f,
-                        LifeTime: -1f
+                        1f
                     );
                     physics.Tick(TimeStep);
                 }
@@ -83,6 +79,7 @@ namespace Physics
                 foreach (Particle particle in AgedParticles)
                 {
                     Particles.Remove(particle);
+                    accumulator.currentAmount--; // TODO: automate this within the accumulator
                 }
                 AgedParticles.Clear();
             }
@@ -120,53 +117,68 @@ namespace Physics
                     }
                 }
             }
-            Particle p0 = engine.Particles[0];
-            Particle p1 = engine.Particles[1];
-            MouseState mouseState = Mouse.GetState();
-            p0.Impose(AnchoredSpring(p0, new Vect(mouseState.X, mouseState.Y), 20f, 1));
-            p1.Impose(Connection(p1, p0, 100, 50));
         }
 
-        public static Force Gravity => new((0, 100f));
+        public static Force Gravity => new((0, 100f)); // This is self explanatory
 
         public static Force Attraction(Particle particle, Particle _particle)
         {
-            Num distance = Vect.Distance(particle.position, _particle.position);
-            if (distance < 100) {distance = 100;}
+            // Force = G * (m1 * m2) / r^2
+            // Force = GravitationalConstant * (Mass1 * Mass2) / Distance^2
+            // explanation:
+            // GravitationalConstant: constant of proportionality
+            // Mass1, Mass2: masses of the particles
+            // Distance: distance between the particles
 
-            Vect direction = Vect.Normalize(_particle.position - particle.position);
+            // Constants
+            Num m1 = particle.mass;
+            Num m2 = _particle.mass;
 
-            Num GravitationalConstant = 6.67430e-11f;
-            Num force = GravitationalConstant * (particle.mass * _particle.mass) / (distance * distance);
+            // Dependents
+            Num r = Vect.Distance(particle.position, _particle.position); // Distance between particles
+            if (r < 100) {r = 100;} // Capped distance to prevent spikes in force at close range
 
-            return new (direction * force);
+            Vect n = Vect.Normalize(_particle.position - particle.position); // Direction (Sin(theta), Cos(theta))
+
+            Num G = 6.67430e-11f; // Gravitational constant
+            Num force = G * (m1 * m2) / (r * r); // Total force
+
+            return new (n * force);
         }
 
         public static Force Spring(Particle particle, Particle _particle, Num springConstant, Num restLength)
         {
+            // Force = -(k/m) * (S * n) - (d/m) * v
+            // Force = -(springConstant / Mass) * (Stretch * Normal) - (Damping / Mass) * Velocity 
+            // explanation:
+            // -(springConstant / Mass): sets force relative to the particles mass
+            // (Stretch * Normal): stretch of the spring relative to the normal(theta); the actual force being applied
+            // -(Damping / Mass) * v: damping applied to velocity relative to the particles mass
+
+            // Constants
             Num R = restLength; // Rest length of spring
             Num m = particle.mass; // Mass of particle
             Num k = springConstant; // Spring constant
             Num d = 0.5f; // Damping factor
 
+            // Dependents
             Vect T = _particle.position; // Anchor position
             Num L = Vect.Distance(particle.position, T); // Length of spring
             Num S = L - R; // Stretch of spring
             Vect p = particle.position; // Position of particle
             Vect v = particle.velocity; // Velocity of particle
 
-            Vect n = Vect.Normalize(p - T); // Normalized distance
+            Vect n = Vect.Normalize(p - T); // Direction (Sin(theta), Cos(theta))
 
-            Vect force = -(k/m) * (S * n) - (d/m) * v;
+            Vect force = -(k/m) * (S * n) - (d/m) * v; // Total force
 
-
-
-            
             return new (force);
         }
 
         public static Force AnchoredSpring(Particle particle, Vect position, Num springConstant, Num restLength)
         {
+            // See Force Spring() for explanation
+
             // Constants
             Num R = restLength; // Rest length of spring
             Vect T = position; // Anchor position
@@ -189,6 +201,8 @@ namespace Physics
 
         public static Force Connection(Particle particle, Particle _particle, Num Tension, Num Length)
         {
+            // in development
+
             // Constants
             Num T = Tension; // Tension of connection
             Num R = Length; // Rest length of connection
@@ -209,6 +223,8 @@ namespace Physics
 
         public static Force AnchoredConnection(Particle particle, Vect position, Num connectLength)
         {
+            // in development
+
             // Constants
             Num R = connectLength; // Rest length of connection
             Vect T = position; // Anchor position
@@ -231,8 +247,8 @@ namespace Physics
 
     public struct Force
     {
-        public Vect totalForce;
-        public Num angularForce;
+        public Vect totalForce; // Total force
+        public Num angularForce; // Angular force
 
         public Force(Vect Force = default, Num AngularForce = default)
         {
