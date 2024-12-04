@@ -1,9 +1,6 @@
 using System;
 using System.Numerics;
 using System.Linq;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using Physics;
 using Types;
 
 namespace Shapes;
@@ -66,7 +63,8 @@ public class Polygon(Vect[] vertices, Vect position = default)
 {
     public Vect[] Vertices { get; private set; } = vertices;
     public Vect Position { get; set; } = position;
-    public float Rotation { get; set; } = 0f;  // Added rotation property
+    public Vect Pivot { get; set; } = position; // Added pivot property
+    public Num Rotation { get; set; } = 0f;  // Added rotation property
     public Num radius => Math.Max(Vertices.Select(v => (float)v.Magnitude()).Max(), 0f); // Added radius property
 
     public Vect[] GetAxes()
@@ -107,26 +105,38 @@ public class Polygon(Vect[] vertices, Vect position = default)
         return (min, max);
     }
 
-    public Vect[] TransformedVertices()  // Change from private to public
+    public void Rotate(Num angle, Vect pivot = default)
+    {
+        Rotation = angle;
+        if (pivot != default)
+        {
+            Pivot = pivot;
+        }
+        else
+        {
+            Pivot = GetCentroid();
+        }
+    }
+
+    public Vect[] TransformedVertices()
     {
         Vect[] transformedVertices = new Vect[Vertices.Length];
-        Vect centroid = GetCentroid();
         
         for (int i = 0; i < Vertices.Length; i++)
         {
             // Translate to origin
-            Vect vertex = Vertices[i] - centroid;
+            Vect vertex = Vertices[i] - Pivot;
             
-            // Rotate - Fix the rotation matrix multiplication
+            // Rotate
             float cos = MathF.Cos(Rotation);
             float sin = MathF.Sin(Rotation);
             Vect rotated = new(
-                vertex.x * cos - vertex.y * sin,  // Fixed this line
-                vertex.x * sin + vertex.y * cos   // Fixed this line
+                vertex.x * cos - vertex.y * sin,
+                vertex.x * sin + vertex.y * cos
             );
             
             // Translate back and apply position
-            transformedVertices[i] = rotated + centroid + Position;
+            transformedVertices[i] = rotated + Pivot + Position;
         }
         return transformedVertices;
     }

@@ -244,11 +244,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\karso\\source\\repos\\PhysicsEngine\\PhysicsEngine\\PhysicsEngine.csproj",
+      "projectUniqueName": "C:\\Users\\karso\\source\\repos\\C# PhysicsEngine\\PhysicsEngine\\PhysicsEngine.csproj",
       "projectName": "PhysicsEngine",
-      "projectPath": "C:\\Users\\karso\\source\\repos\\PhysicsEngine\\PhysicsEngine\\PhysicsEngine.csproj",
+      "projectPath": "C:\\Users\\karso\\source\\repos\\C# PhysicsEngine\\PhysicsEngine\\PhysicsEngine.csproj",
       "packagesPath": "C:\\Users\\karso\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\karso\\source\\repos\\PhysicsEngine\\PhysicsEngine\\obj\\",
+      "outputPath": "C:\\Users\\karso\\source\\repos\\C# PhysicsEngine\\PhysicsEngine\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

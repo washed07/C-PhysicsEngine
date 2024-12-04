@@ -9,6 +9,18 @@ namespace Types
 
         public Num(float value) => this.value = value;
 
+        public static Num Abs(Num a) => new(Math.Abs(a));
+
+        public static Num Min(Num a, Num b) => new(Math.Min(a, b));
+
+        public static Num Max(Num a, Num b) => new(Math.Max(a, b));
+
+        public static Num Cos(Num value) => new((float)Math.Cos(value));
+
+        public static Num Sin(Num value) => new((float)Math.Sin(value));
+
+        public static Num Clamp(Num value, Num min, Num max) => Min(Max(value, min), max);
+
         // Generic conversion method for numeric types
         private static Num FromT<T>(T value) where T : IConvertible
             => new(Convert.ToSingle(value));

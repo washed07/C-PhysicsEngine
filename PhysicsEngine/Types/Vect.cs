@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Types
 {
@@ -56,6 +55,24 @@ namespace Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vect Lerp(Vect a, Vect b, Num t) => a + (b - a) * t;
 
+        public static Vect Min(Vect a, Vect b) => new(
+            Num.Min(a.x, b.x),
+            Num.Min(a.y, b.y),
+            Num.Min(a.z, b.z),
+            Num.Min(a.w, b.w)
+        );
+
+        public static Vect Max(Vect a, Vect b) => new(
+            Num.Max(a.x, b.x),
+            Num.Max(a.y, b.y),
+            Num.Max(a.z, b.z),
+            Num.Max(a.w, b.w)
+        );
+
+        public static Vect Clamp(Vect value, Vect min, Vect max) => Min(Max(value, min), max);
+
+        public static Vect Abs(Vect value) => new(Num.Abs(value.x), Num.Abs(value.y), Num.Abs(value.z), Num.Abs(value.w));
+
         // Optimized operators using SIMD when available
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vect operator +(Vect a, Vect b) => new(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
@@ -63,8 +80,24 @@ namespace Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vect operator -(Vect a, Vect b) => new(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w);
 
+        public static Vect Rotate(Vect v, Num angle)
+        {
+            Num cos = Num.Cos(angle);
+            Num sin = Num.Sin(angle);
+            return new Vect(
+                v.x * cos - v.y * sin,
+                v.x * sin + v.y * cos,
+                v.z,
+                v.w
+            );
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vect operator *(Vect a, Num b) => new(a.x * b, a.y * b, a.z * b, a.w * b);
+
+        public static Vect operator +(Vect a, Num b) => new(a.x + b, a.y + b, a.z + b, a.w + b);
+
+        public static Vect operator +(Num a, Vect b) => new(a + b.x, a + b.y, a + b.z, a + b.w);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vect operator *(Vect a, Vect b) => new(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);

@@ -1,14 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Xna.Framework.Graphics;
-using Core;
-using Physics;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography.X509Certificates;
-using Microsoft.Xna.Framework;
 using Shapes;
 using Types;
 
@@ -23,8 +14,12 @@ public class Particle
     public Num lifeTime; // Total Life span
     public Num age; // Current age
     public Vect position;
+    public Num rotation;
+    public Vect pivot;
     public Vect velocity;
+    public Num angularVelocity;
     public Vect acceleration; 
+    public Num angularAcceleration;
     public Num mass;
     public Num damping = 1f; // Damping factor
 
@@ -37,6 +32,7 @@ public class Particle
         radius = Radius;
         mass = Mass;
         position = Position;
+        pivot = position;
         polygon.Position = position;
         damping = Damping;
         velocity = InitalVelocity;
@@ -60,11 +56,15 @@ public class Particle
 
 
         velocity += acceleration * Engine.TimeStep;
+        angularVelocity += angularAcceleration * Engine.TimeStep;
         position += velocity * Engine.TimeStep;
+        rotation += angularVelocity * Engine.TimeStep;
         polygon.Position = position;
 
         acceleration = (0,0);
+        angularAcceleration = 0;
         velocity *= damping;
+        angularVelocity *= damping;
     }
 
     // Apply a force to the particle
@@ -73,7 +73,12 @@ public class Particle
         acceleration += force / mass;
     }
 
-    public void Update() {polygon.Position = position;}
+    public void ImposeAngular(Num force)
+    {
+        angularAcceleration += force / mass;
+    }
+
+    public void Update() {polygon.Position = position; polygon.Rotate(rotation, pivot);}
 
 }
 
