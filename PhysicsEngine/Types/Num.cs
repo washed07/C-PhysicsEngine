@@ -25,6 +25,8 @@ namespace Types
         private static Num FromT<T>(T value) where T : IConvertible
             => new(Convert.ToSingle(value));
 
+        public static Num n(Num value) => new(value);
+
         // Implicit conversions
         public static implicit operator Num(byte value) => FromT(value);
         public static implicit operator Num(int value) => FromT(value);

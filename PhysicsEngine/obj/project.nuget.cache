@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "/hzbi5AU64o=",
+  "dgSpecHash": "XnewuwYqFIU=",
   "success": true,
-  "projectFilePath": "c:\\Users\\karso\\source\\repos\\C# PhysicsEngine\\PhysicsEngine\\PhysicsEngine.csproj",
+  "projectFilePath": "C:\\Users\\karso\\source\\repos\\C# PhysicsEngine\\PhysicsEngine\\PhysicsEngine.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\karso\\.nuget\\packages\\monogame.content.builder.task\\3.8.2.1105\\monogame.content.builder.task.3.8.2.1105.nupkg.sha512",
     "C:\\Users\\karso\\.nuget\\packages\\monogame.framework.desktopgl\\3.8.2.1105\\monogame.framework.desktopgl.3.8.2.1105.nupkg.sha512",
@@ -11,5 +11,12 @@
     "C:\\Users\\karso\\.nuget\\packages\\system.memory\\4.5.3\\system.memory.4.5.3.nupkg.sha512",
     "C:\\Users\\karso\\.nuget\\packages\\system.valuetuple\\4.5.0\\system.valuetuple.4.5.0.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1900",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json."
+    }
+  ]
 }

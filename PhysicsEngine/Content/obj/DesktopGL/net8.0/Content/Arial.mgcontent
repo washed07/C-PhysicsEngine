@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PipelineBuildEvent xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <SourceFile>c:/Users/karso/source/repos/C# PhysicsEngine/PhysicsEngine/Content/File.spritefont</SourceFile>
+  <SourceFile>C:/Users/karso/source/repos/C# PhysicsEngine/PhysicsEngine/Content/File.spritefont</SourceFile>
   <SourceTime>2024-11-28T11:44:53.3867757-06:00</SourceTime>
-  <DestFile>c:/Users/karso/source/repos/C# PhysicsEngine/PhysicsEngine/Content/bin/DesktopGL/Content/Arial.xnb</DestFile>
-  <DestTime>2024-12-03T17:10:14.7155634-06:00</DestTime>
+  <DestFile>C:/Users/karso/source/repos/C# PhysicsEngine/PhysicsEngine/Content/bin/DesktopGL/Content/Arial.xnb</DestFile>
+  <DestTime>2024-12-04T15:59:24.8125062-06:00</DestTime>
   <Importer>FontDescriptionImporter</Importer>
   <ImporterTime>2024-08-16T12:05:56-05:00</ImporterTime>
   <Processor>FontDescriptionProcessor</Processor>

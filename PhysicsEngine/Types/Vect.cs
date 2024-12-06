@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.NetworkInformation;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -7,10 +8,18 @@ namespace Types
     [StructLayout(LayoutKind.Sequential)]
     public struct Vect
     {
-        public readonly Num x, y, z, w;
+        public Num x, y, z, w;
         private readonly Num? cachedMagnitude;
 
-        public static Vect Zero => new Vect(0, 0);
+        public static readonly Vect Zero = (0, 0);
+
+        public static readonly Vect Up = (0, -1);
+
+        public static readonly Vect Down = (0, 1);
+
+        public static readonly Vect Right = (1, 0);
+
+        public static readonly Vect Left = (-1, 0);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vect(Num x, Num y, Num z = default, Num w = default)

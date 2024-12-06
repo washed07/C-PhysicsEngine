@@ -4,7 +4,7 @@
   <Platform>DesktopGL</Platform>
   <Config />
   <SourceFiles>
-    <File>c:/Users/karso/source/repos/C# PhysicsEngine/PhysicsEngine/Content/File.spritefont</File>
+    <File>C:/Users/karso/source/repos/C# PhysicsEngine/PhysicsEngine/Content/File.spritefont</File>
   </SourceFiles>
   <DestFiles>
     <File>Arial.spritefont</File>

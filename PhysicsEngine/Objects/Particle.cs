@@ -15,7 +15,7 @@ public class Particle
     public Num age; // Current age
     public Vect position;
     public Num rotation;
-    public Vect pivot;
+    public Vect pivot = (0, 0);
     public Vect velocity;
     public Num angularVelocity;
     public Vect acceleration; 
@@ -32,7 +32,6 @@ public class Particle
         radius = Radius;
         mass = Mass;
         position = Position;
-        pivot = position;
         polygon.Position = position;
         damping = Damping;
         velocity = InitalVelocity;
@@ -57,14 +56,15 @@ public class Particle
 
         velocity += acceleration * Engine.TimeStep;
         angularVelocity += angularAcceleration * Engine.TimeStep;
+
         position += velocity * Engine.TimeStep;
         rotation += angularVelocity * Engine.TimeStep;
-        polygon.Position = position;
+        
+        velocity *= damping;
+        angularVelocity *= damping;
 
         acceleration = (0,0);
         angularAcceleration = 0;
-        velocity *= damping;
-        angularVelocity *= damping;
     }
 
     // Apply a force to the particle
@@ -80,19 +80,29 @@ public class Particle
 
     public void Update() {polygon.Position = position; polygon.Rotate(rotation, pivot);}
 
+    public bool IsMassInf()
+    {
+        if (mass > 0 && mass < 1e10) {return false;} else {return true;}
+    }
+
+    public Vect getPivotTo(Vect point)
+    {
+        return point - position;
+    }
+
 }
 
 // Represents an accumulator that emits particles
 public class Accumulator
 {
-    private Engine engine; // Reference to the engine
+    private readonly Engine _Engine; // Reference to the engine
     public Vect position; // Position of the accumulator
     public Physics.Laws laws; // Laws applied to emitted particles
 
     // Constructor to initialize the accumulator
     public Accumulator(Engine Engine, Vect Position, Physics.Laws Laws = Physics.Laws.Global)
     {
-        engine = Engine;
+        _Engine = Engine;
         position = Position;
         laws = Laws;
     }
@@ -159,6 +169,6 @@ public class Accumulator
     {
         Particle particle = new Particle(polygon, laws, LifeTime, Radius, Mass, position, 1f, Vel);
         particle.LoadContent();
-        engine.Particles.Add(particle);
+        _Engine.Particles.Add(particle);
     }
 }

@@ -5,7 +5,7 @@ using Types;
 
 namespace Shapes;
 
-public struct CreateShape
+public struct Shape
 {
     public static Polygon Square(Num Width, Num Height)
     {
@@ -63,7 +63,7 @@ public class Polygon(Vect[] vertices, Vect position = default)
 {
     public Vect[] Vertices { get; private set; } = vertices;
     public Vect Position { get; set; } = position;
-    public Vect Pivot { get; set; } = position; // Added pivot property
+    public Vect Pivot { get; set; } = (0, 0); // Added pivot property
     public Num Rotation { get; set; } = 0f;  // Added rotation property
     public Num radius => Math.Max(Vertices.Select(v => (float)v.Magnitude()).Max(), 0f); // Added radius property
 
@@ -114,7 +114,7 @@ public class Polygon(Vect[] vertices, Vect position = default)
         }
         else
         {
-            Pivot = GetCentroid();
+            Pivot = (0, 0);
         }
     }
 
@@ -122,14 +122,16 @@ public class Polygon(Vect[] vertices, Vect position = default)
     {
         Vect[] transformedVertices = new Vect[Vertices.Length];
         
+        // Cache trigonometric calculations
+        float cos = MathF.Cos(Rotation);
+        float sin = MathF.Sin(Rotation);
+        
         for (int i = 0; i < Vertices.Length; i++)
         {
             // Translate to origin
             Vect vertex = Vertices[i] - Pivot;
             
             // Rotate
-            float cos = MathF.Cos(Rotation);
-            float sin = MathF.Sin(Rotation);
             Vect rotated = new(
                 vertex.x * cos - vertex.y * sin,
                 vertex.x * sin + vertex.y * cos

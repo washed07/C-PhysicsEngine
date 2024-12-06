@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\karso\\source\\repos\\C# PhysicsEngine\\PhysicsEngine\\PhysicsEngine.csproj": {}
+    "C:\\Users\\karso\\source\\repos\\C# PhysicsEngine\\PhysicsEngine\\PhysicsEngine.csproj": {}
   },
   "projects": {
-    "c:\\Users\\karso\\source\\repos\\C# PhysicsEngine\\PhysicsEngine\\PhysicsEngine.csproj": {
+    "C:\\Users\\karso\\source\\repos\\C# PhysicsEngine\\PhysicsEngine\\PhysicsEngine.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\karso\\source\\repos\\C# PhysicsEngine\\PhysicsEngine\\PhysicsEngine.csproj",
+        "projectUniqueName": "C:\\Users\\karso\\source\\repos\\C# PhysicsEngine\\PhysicsEngine\\PhysicsEngine.csproj",
         "projectName": "PhysicsEngine",
-        "projectPath": "c:\\Users\\karso\\source\\repos\\C# PhysicsEngine\\PhysicsEngine\\PhysicsEngine.csproj",
+        "projectPath": "C:\\Users\\karso\\source\\repos\\C# PhysicsEngine\\PhysicsEngine\\PhysicsEngine.csproj",
         "packagesPath": "C:\\Users\\karso\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\karso\\source\\repos\\C# PhysicsEngine\\PhysicsEngine\\obj\\",
+        "outputPath": "C:\\Users\\karso\\source\\repos\\C# PhysicsEngine\\PhysicsEngine\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
