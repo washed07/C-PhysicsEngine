@@ -201,10 +201,4 @@ namespace Core
             spriteBatch.Draw(texture, new Rectangle((int)start.X, (int)start.Y, (int)edge.Length(), 1), null, color, angle, Vector2.Zero, SpriteEffects.None, 0);
         }
     }
-
-    public enum Status // Basic on/off enum
-    {
-        On,
-        Off,
-    }
 }

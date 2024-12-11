@@ -35,8 +35,8 @@ namespace Physics
         {
             physics = new Physics(this);
 
-            Particles.Add(new Particle(Shape.Square(20, 20), Physics.Laws.None, -1f, 10f, 1e18, (500, 400), 1f)); // Massive masses attratction only works from 1e17 to 1e18. 
-            Particles.Add(new Particle(Shape.Square(20, 20), Physics.Laws.Global, -1f, -1f, 1f, (400, 600), 1f));
+            Particles.Add(new Particle(Shape.Square(200, 20), Physics.Laws.None, -1f, 10f, -10, (400, 400), 1f)); // Massive masses attratction only works from 1e17 to 1e18. 
+            Particles.Add(new Particle(Shape.Square(20, 20), Physics.Laws.Global, -1f, -1f, 1f, (500, 200), 1f));
             //Particles.Add(new Particle(Shape.Square(20, 20), Motion.Static, Laws.None, -1f, 10f, 10000f, (500, 300), 1f));
             //Particles.Add(new Particle(Shape.Square(20, 20), Motion.Static, Laws.None, -1f, 10f, 100f, (500, 500), 1f));
             
@@ -103,10 +103,10 @@ namespace Physics
         {
             foreach (Particle particle in _Engine.Particles)
             {
-                if (!particle.IsMassInf())
-                {
-                    usingOtherParticles(particle, (p1, p2) => F.p(p1, p2, 100f, 100));
-                }
+                if (particle.IsMassInf() == true) {continue;}
+                particle.Impose(F.Gravity(particle, 1000, Vect.Down));
+
+                ResolveCollisions(particle);
             }
         }
 
@@ -122,18 +122,32 @@ namespace Physics
             }
             return Particles;
         }
-        public void usingOtherParticles(Particle excludedParticle, Action<Particle, Particle> function)
+
+        public void UsingOtherParticles(Particle excludedParticle, Action<Particle, Particle> function)
         {
             foreach (Particle otherParticle in getOtherParticles(excludedParticle))
             {
                 function(excludedParticle, otherParticle);
             }
         }
-        public void usingOtherParticles(Particle excludedParticle, Action<Particle> function)
+
+        public void UsingOtherParticles(Particle excludedParticle, Action<Particle> function)
         {
             foreach (Particle otherParticle in getOtherParticles(excludedParticle))
             {
                 function(otherParticle);
+            }
+        }
+
+        public void ResolveCollisions(Particle particle)
+        {
+            foreach (Particle otherParticle in getOtherParticles(particle))
+            {
+                Collision.MTV collision = Collision.Resolve(particle.polygon, otherParticle.polygon);
+                if (collision != null) 
+                {
+                    F.Collision(particle, otherParticle, collision.Point);
+                }
             }
         }
     }

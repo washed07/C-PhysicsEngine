@@ -4,14 +4,15 @@ using Microsoft.Xna.Framework.Input;
 using System.Drawing;
 using System;
 using Physics;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Forces;
 
 public class F
 {
-    public static Force g(Num gravity, Vect direction) => new((gravity, gravity) * direction); // Gravity
+    public static Force Gravity(Particle particle, Num gravity, Vect direction) => new(new Vect(gravity, gravity) * direction); // Gravity
 
-    public static Force gPull (Particle particle, Particle _particle) // Mutual Attraction
+    public static Force Attraction (Particle particle, Particle _particle) // Mutual Attraction
     {
         // Force = G * (m1 * m2) / r^2
         // Force = GravitationalConstant * (Mass1 * Mass2) / Distance^2
@@ -54,7 +55,7 @@ public class F
         return new (n * force);
     }
 
-    public static Force s (Particle particle, Particle _particle, Num springConstant, Num restLength) // Spring
+    public static Force Spring (Particle particle, Particle _particle, Num springConstant, Num restLength) // Spring
     {
         // Force = -(k/m) * (S * n) - (d/m) * v
         // Force = -(springConstant / Mass) * (Stretch * Normal) - (Damping / Mass) * Velocity 
@@ -81,7 +82,7 @@ public class F
         return new (force);
     }
 
-    public static Force sAnchor (Particle particle, Vect position, Num springConstant, Num restLength) // Anchored Spring
+    public static Force SpringAnchor (Particle particle, Vect position, Num springConstant, Num restLength) // Anchored Spring
     {
         // See Force Spring() for explanation   
 
@@ -103,80 +104,84 @@ public class F
         return new (force);
     }
 
-    public static Force sCursor (Particle particle, Num springConstant, Num restLength) // Cursor Spring
+    public static void Collision (Particle particle, Particle otherParticle, Vect collisionPoint) 
     {
-        // See Force Spring() for explanation   
+        Particle x0 = particle;
+        Particle x1 = otherParticle;
 
-        // Constants
-        Num R = restLength; // Rest length of spring
-        Num m = 1; // Mass of particle
-        Num k = springConstant; // Spring constant
-        Num d = 0.1f; // Damping factor 
+        Vect edge = x1.GetEdgeAtPoint(collisionPoint);
+        Vect n = new Vect(-edge.y, edge.x);
+        n = Vect.Normalize(n);
 
-        // Dependents
-        Vect T = (Mouse.GetState().X, Mouse.GetState().Y); // Cursor position
-        Num L = Vect.Distance(particle.position, T); // Length of spring
-        Num S = L - R; // Stretch of spring
-        Vect p = particle.position; // Position of particle
-        Vect v = particle.velocity; // Velocity of particle 
-        Vect n = Vect.Normalize(p - T); // Direction (Sin(theta), Cos(theta))   
-        Vect force = -(k/m) * (S * n) - v;
+        Num e = 1f;
 
-        return new (force * particle.mass);
-    }
+        Num rap = Vect.Distance(x0.position + x0.Centroid, collisionPoint);
+        Num rbp = Vect.Distance(x1.position + x1.Centroid, collisionPoint);
 
-    public static Force t(Particle particle, Particle otherParticle, Num _g, Num _R)
-    {
+        Num ma = x0.mass;
 
-        // Constants
-        Num g = _g; // Gravity
-        Num R = _R; // Length of torque arm
-        Num m = particle.mass; // Mass
+        Num Ia = x0.Inertia;
 
-        // Dependents
-        Vect p = particle.position; // 
-        Vect b = otherParticle.position;
+        Vect va1 = x0.velocity;
+        Vect vb1 = x1.velocity;
 
-        // Direction control
-        Vect d = p - b; particle.position = b + R * Vect.Normalize(d); //
-        Num theta = d.x/R;
+        Num wa1 = x0.angularVelocity;
+        Num wb1 = x1.angularVelocity;
 
-        Num xdir = d.x/Math.Abs(d.x);
-        Vect n = Vect.Normalize((d.y * xdir, -d.x * xdir));
+        Vect vap1 = va1 + wa1 * rap;
 
-        Num I = m * Math.Pow(R, 2); // Intertia = m * R^2
-        Num a = -g/R * Math.Sin(theta);
+        Vect vp1 = va1 + wa1 * rap - vb1 - wb1 * rbp;
 
-        Num torque = -R * m * g * Math.Sin(theta);
+        Vect j;
 
-        Vect force = torque * n;
+        if (!x1.IsMassInf()) 
+        {
+            Num mb = x1.mass;
+            Num Ib = x1.Inertia;
+
+            j = (-(1 + e) * vp1 * n) / (1/ma + 1/mb + ((rap * n) * (rap * n)) / Ia + ((rbp * n) * (rbp * n)) / Ib);
+        }
+        else
+        {
+            j = (-(1 + e) * vap1 * n) / ((1/ma + ((rap * n) * (rap * n))) / Ia);
+        }
+
+        particle.acceleration = Vect.Zero;
+        particle.angularAcceleration = 0;
+
+        Vect va2 = va1 - j * n / ma;
         
-        return new(force);
-    }
+        particle.velocity = va2;
+
+        Num wa2 = wa1 + (rap * Vect.Dot(j, n)) / Ia;
+        //Num wb2 = wb1 - (rbp * (j * n)) / Ib;
+
+        x0.angularVelocity = wa2;
+
+        Console.WriteLine($"==============\n edge: {edge}\n n: {n}\n e: {e}\n rap: {rap}\n rbp: {rbp}\n ma: {ma}\n Ia: {Ia}\n va1: {va1}\n vb1: {vb1}\n wa1: {wa1}\n wb1: {wb1}\n vap1: {vap1}\n vp1: {vp1}\n j: {j}\n Final Velocity: {va2}\n dem: {((1/ma + ((rap * n) * (rap * n))) / Ia)}==============");
+
+    } 
 
     private static Num Theta = Math.PI/4;
     private static Num aVel = 0;
 
-    public static modForce p(Particle particle, Particle otherParticle, Num _g, Num _R, float b = 1)
+    public static void PendulumAnchor(Particle particle, Particle otherParticle, Num _g, Num _R, float b = 1) // Anored Pendulum
     {
-        Num g = _g; // Gravity
+        // Constants
+        Num g = _g * particle.mass; // Gravity
         Num R = _R; // Length
-        Vect P = otherParticle.position; // Pivot position
+        Particle x0 = otherParticle; // Pivot
+        Particle x1  = particle; // Bob
 
-        Num aForce = g * Math.Sin(Theta) / R; // Applied acceleration relitive to angle of the pendulum Against Vect.Down (0, 1)
+        x1.angularAcceleration = -g/R * Math.Sin(Theta) * Engine.TimeStep; // x'' || Acceleration
+        x1.angularVelocity += x1.angularAcceleration * Engine.TimeStep; // x' || Velocity
+        Theta += aVel; // 0 (theta) || Angle
 
-        // KINEMATICS
-        Num aAccel = -1 * aForce * Engine.TimeStep; // Acceleration of the bob (create new variable so its reset to 0 every iteration)
-        aVel += aAccel; // Velocity of the bob
-        Theta += aVel; // Angle of the bob
+        aVel *= b; // Damping angular velocity
 
-        aVel *= b; // Damping
-
-        // Final position
-        particle.position.x = R * Math.Sin(Theta) + P.x;
-        particle.position.y = R * Math.Cos(Theta) + P.y;
-
-        return new();
+        // POSITION
+        x1.position.x = x0.position.x + R * Math.Sin(Theta); 
+        x1.position.y = x0.position.y - R * Math.Cos(Theta); 
     }
 
 }

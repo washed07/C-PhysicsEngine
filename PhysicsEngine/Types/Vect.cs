@@ -152,6 +152,9 @@ namespace Types
         public static bool operator >(Vect a, Vect b) => a.SqrMagnitude() > b.SqrMagnitude();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vect operator -(Vect a, Num b) => new(a.x - b, a.y - b, a.z - b, a.w - b);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator <(Vect a, Vect b) => a.SqrMagnitude() < b.SqrMagnitude();
 
         public static implicit operator Vect((Num x, Num y, Num z) tuple)

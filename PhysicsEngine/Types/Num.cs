@@ -25,6 +25,10 @@ namespace Types
         private static Num FromT<T>(T value) where T : IConvertible
             => new(Convert.ToSingle(value));
 
+        // Add null check for FromT
+        private static Num? FromT<T>(T? value) where T : struct, IConvertible =>
+            value == null ? null : new Num(Convert.ToSingle(value));
+
         public static Num n(Num value) => new(value);
 
         // Implicit conversions
@@ -33,6 +37,10 @@ namespace Types
         public static implicit operator Num(float value) => FromT(value);
         public static implicit operator Num(double value) => FromT(value);
         public static implicit operator Num(decimal value) => FromT(value);
+
+        // Null-safe implicit conversions
+        public static implicit operator Num?(float? value) => value.HasValue ? new Num(value.Value) : null;
+        public static implicit operator Num?(int? value) => value.HasValue ? new Num(value.Value) : null;
 
         // Conversions to other types
         public static implicit operator float(Num value) => value.value;
@@ -52,6 +60,19 @@ namespace Types
         public static Num operator ++(Num a) => new(a.value + 1);
         public static Num operator --(Num a) => new(a.value - 1);
 
+        // Null-safe arithmetic operators
+        public static Num? operator +(Num? a, Num? b) => 
+            a.HasValue && b.HasValue ? new Num(a.Value.value + b.Value.value) : null;
+        
+        public static Num? operator -(Num? a, Num? b) => 
+            a.HasValue && b.HasValue ? new Num(a.Value.value - b.Value.value) : null;
+        
+        public static Num? operator *(Num? a, Num? b) => 
+            a.HasValue && b.HasValue ? new Num(a.Value.value * b.Value.value) : null;
+        
+        public static Num? operator /(Num? a, Num? b) => 
+            a.HasValue && b.HasValue ? new Num(a.Value.value / b.Value.value) : null;
+
         // Comparison operators
         public static bool operator ==(Num a, Num b) => a.value == b.value;
         public static bool operator !=(Num a, Num b) => a.value != b.value;
@@ -59,6 +80,18 @@ namespace Types
         public static bool operator <(Num a, Num b) => a.value < b.value;
         public static bool operator >=(Num a, Num b) => a.value >= b.value;
         public static bool operator <=(Num a, Num b) => a.value <= b.value;
+
+        // Null-safe comparison operators
+        public static bool operator ==(Num? a, Num? b) =>
+            (!a.HasValue && !b.HasValue) || (a.HasValue && b.HasValue && a.Value.value == b.Value.value);
+        
+        public static bool operator !=(Num? a, Num? b) => !(a == b);
+    
+        public static bool operator >(Num? a, Num? b) =>
+            a.HasValue && b.HasValue && a.Value.value > b.Value.value;
+        
+        public static bool operator <(Num? a, Num? b) =>
+            a.HasValue && b.HasValue && a.Value.value < b.Value.value;
 
         // Logical operators
         public static bool operator true(Num a) => a.value != 0;

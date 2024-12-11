@@ -28,10 +28,10 @@ public struct Torque
     public static Torque operator *(Torque t, Num n) => new(t.totalTorque * n);
 }
 
-public struct modForce
+public struct Change
     {
 
-        public modForce() {}
+        public Change() {}
 
-        public static implicit operator Vect(modForce force) => Vect.Zero;
+        public static implicit operator Vect(Change force) => Vect.Zero;
     }

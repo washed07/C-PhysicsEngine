@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using System.Linq;
 using Types;
+using Physics;
 
 namespace Shapes;
 
@@ -255,4 +256,66 @@ public class Polygon(Vect[] vertices, Vect position = default)
         return (triangleMass * (a * a + b * b + c * c)) / 36.0;
     }
 
+}
+
+public static class Collision
+{
+    public class MTV // Minimum Translation Vector
+    {
+        public Vect Axis { get; set; }
+        public float Overlap { get; set; }
+        public Vect Point { get; set; }  // New collision point property
+
+        public MTV(Vect axis, float overlap, Vect point)
+        {
+            Axis = axis;
+            Overlap = overlap;
+            Point = point;
+        }
+    }
+
+    public static MTV Resolve(Polygon poly1, Polygon poly2)
+    {
+        Vector2[] axes = [.. poly1.GetAxes(), .. poly2.GetAxes()];
+        float minOverlap = float.MaxValue;
+        Vect smallestAxis = Vector2.Zero;
+        Vect collisionPoint = Vector2.Zero;
+
+        foreach (Vector2 axis in axes)
+        {
+            (float min1, float max1) = poly1.Project(axis);
+            (float min2, float max2) = poly2.Project(axis);
+
+            float overlap = Math.Min(max1 - min2, max2 - min1);
+
+            if (max1 < min2 || max2 < min1)
+                return null;
+
+            if (overlap < minOverlap)
+            {
+                minOverlap = overlap;
+                smallestAxis = axis;
+
+                Vector2 center1 = poly1.GetCentroid() + poly1.Position;
+                Vector2 center2 = poly2.GetCentroid() + poly2.Position;
+                if (Vector2.Dot(center2 - center1, smallestAxis) < 0)
+                {
+                    smallestAxis = -smallestAxis;
+                }
+            }
+        }
+
+        // Calculate collision point
+        var vertices1 = poly1.TransformedVertices();
+        var vertices2 = poly2.TransformedVertices();
+        
+        // Find the deepest penetrating vertices
+        var deepestPoint1 = vertices1.OrderBy(v => Vector2.Dot(v, smallestAxis)).First();
+        var deepestPoint2 = vertices2.OrderByDescending(v => Vector2.Dot(v, smallestAxis)).First();
+        
+        // Use the midpoint as the collision point
+        collisionPoint = (deepestPoint1 + deepestPoint2) * 0.5f;
+
+        return new MTV(smallestAxis, minOverlap, collisionPoint);
+    }
 }

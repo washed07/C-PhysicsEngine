@@ -21,7 +21,11 @@ public class Particle
     public Vect acceleration; 
     public Num angularAcceleration;
     public Num mass;
-    public Num damping = 1f; // Damping factor
+    public Num damping = 0.9995f; // Damping factor
+
+    // Properties
+    public Vect Centroid => polygon.GetCentroid();
+    public Num Inertia => Polygon.CalculateMomentOfInertia(polygon.Vertices, mass);
 
     // Constructor to initialize the particle
     public Particle(Polygon Polygon, Physics.Laws Laws, Num LifeTime, Num Radius, Num Mass, Vect Position, Num Damping, Vect InitalVelocity = default)
@@ -33,7 +37,7 @@ public class Particle
         mass = Mass;
         position = Position;
         polygon.Position = position;
-        damping = Damping;
+        pivot = polygon.GetCentroid();
         velocity = InitalVelocity;
     }
 
@@ -57,13 +61,13 @@ public class Particle
         velocity += acceleration * Engine.TimeStep;
         angularVelocity += angularAcceleration * Engine.TimeStep;
 
-        position += velocity * Engine.TimeStep;
-        rotation += angularVelocity * Engine.TimeStep;
-        
         velocity *= damping;
         angularVelocity *= damping;
 
-        acceleration = (0,0);
+        position += velocity * Engine.TimeStep;
+        rotation += angularVelocity * Engine.TimeStep;
+
+        acceleration = Vect.Zero;
         angularAcceleration = 0;
     }
 
@@ -89,7 +93,37 @@ public class Particle
     {
         return point - position;
     }
+    
+    public Vect GetEdgeAtPoint(Vect point)
+    {
+        var vertices = polygon.TransformedVertices();
+        var minDistSq = float.MaxValue;
+        Vect edge = default;
 
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            var v1 = vertices[i];
+            var v2 = vertices[(i + 1) % vertices.Length];
+            
+            // Calculate point-to-line-segment distance squared
+            var lineVec = v2 - v1;
+            var pointVec = point - v1;
+            var lineLengthSq = lineVec.SqrMagnitude();
+            
+            // Project point onto line segment
+            var t = Num.Max(0, Num.Min(1, Vect.Dot(pointVec, lineVec) / lineLengthSq));
+            var projection = v1 + lineVec * t;
+            var distSq = Vect.DistanceSqr(point, projection);
+
+            if (distSq < minDistSq)
+            {
+                minDistSq = distSq;
+                edge = (lineVec.y, lineVec.x);
+            }
+        }
+
+        return edge;
+    }
 }
 
 // Represents an accumulator that emits particles
