@@ -94,36 +94,6 @@ public class Particle
         return point - position;
     }
     
-    public Vect GetEdgeAtPoint(Vect point)
-    {
-        var vertices = polygon.TransformedVertices();
-        var minDistSq = float.MaxValue;
-        Vect edge = default;
-
-        for (int i = 0; i < vertices.Length; i++)
-        {
-            var v1 = vertices[i];
-            var v2 = vertices[(i + 1) % vertices.Length];
-            
-            // Calculate point-to-line-segment distance squared
-            var lineVec = v2 - v1;
-            var pointVec = point - v1;
-            var lineLengthSq = lineVec.SqrMagnitude();
-            
-            // Project point onto line segment
-            var t = Num.Max(0, Num.Min(1, Vect.Dot(pointVec, lineVec) / lineLengthSq));
-            var projection = v1 + lineVec * t;
-            var distSq = Vect.DistanceSqr(point, projection);
-
-            if (distSq < minDistSq)
-            {
-                minDistSq = distSq;
-                edge = (lineVec.y, lineVec.x);
-            }
-        }
-
-        return edge;
-    }
 }
 
 // Represents an accumulator that emits particles

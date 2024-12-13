@@ -59,6 +59,9 @@ namespace Types
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Vect Perpendicular() => new(-y, x, z, w);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vect operator -(Vect a) => new(-a.x, -a.y, -a.z, -a.w);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

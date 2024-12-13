@@ -17,7 +17,7 @@ namespace Physics
     public class Engine
     {
         private const int TPS = 60; // Ticks per second
-        private const float Speed = 0.1f; // Speed factor
+        private const float Speed = 1f; // Speed factor
         private const int Iterations = 1; // Number of iterations per update
 
         public static float TimeStep => 1f / TPS / Iterations * Speed; // Time step for each update
@@ -35,8 +35,10 @@ namespace Physics
         {
             physics = new Physics(this);
 
-            Particles.Add(new Particle(Shape.Square(200, 20), Physics.Laws.None, -1f, 10f, -10, (400, 400), 1f)); // Massive masses attratction only works from 1e17 to 1e18. 
-            Particles.Add(new Particle(Shape.Square(20, 20), Physics.Laws.Global, -1f, -1f, 1f, (500, 200), 1f));
+            Particle platform = new Particle(Shape.Square(200, 20), Physics.Laws.None, -1f, 10f, -10, (400, 400), 1f);
+            Particle box = new Particle(Shape.Square(50, 20), Physics.Laws.Global, -1f, -1f, 1f, (500, 200), 1f);
+            Particles.Add(platform);
+            Particles.Add(box);
             //Particles.Add(new Particle(Shape.Square(20, 20), Motion.Static, Laws.None, -1f, 10f, 10000f, (500, 300), 1f));
             //Particles.Add(new Particle(Shape.Square(20, 20), Motion.Static, Laws.None, -1f, 10f, 100f, (500, 500), 1f));
             
@@ -44,6 +46,8 @@ namespace Physics
             {
                 particle.Initialize();
             }
+            box.rotation = 0f;
+            platform.rotation = 80f;
         }
 
         // Load content for all particles
@@ -90,7 +94,9 @@ namespace Physics
     {
         private readonly Engine _Engine; // Reference to the engine
 
-        public enum Laws {Global, Local, Individual, None} // Laws that can be applied to particles
+        public enum Laws {Global, Local, Individual, None} // GET RID OF
+
+        public Force Gravity = F.Gravity(100f, Vect.Down);
 
         // Constructor that takes an Engine parameter
         public Physics(Engine engine)
@@ -104,7 +110,7 @@ namespace Physics
             foreach (Particle particle in _Engine.Particles)
             {
                 if (particle.IsMassInf() == true) {continue;}
-                particle.Impose(F.Gravity(particle, 1000, Vect.Down));
+                particle.Impose(Gravity);
 
                 ResolveCollisions(particle);
             }
@@ -146,7 +152,7 @@ namespace Physics
                 Collision.MTV collision = Collision.Resolve(particle.polygon, otherParticle.polygon);
                 if (collision != null) 
                 {
-                    F.Collision(particle, otherParticle, collision.Point);
+                    F.Collision(particle, otherParticle, collision.Point, Gravity);
                 }
             }
         }

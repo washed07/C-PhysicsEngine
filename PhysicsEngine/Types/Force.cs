@@ -1,3 +1,5 @@
+using System;
+
 namespace Types;
 
 public struct Force
@@ -12,6 +14,7 @@ public struct Force
     public static implicit operator Vect(Force force) => force.totalForce;
     public static implicit operator Force(Vect force) => new(force);
     public static Force operator *(Force f, Num n) => new(f.totalForce * n);
+    public static Force operator *(Force f, Double d) => new(f.totalForce * d);
 }
 
 public struct Torque
@@ -27,11 +30,3 @@ public struct Torque
     public static implicit operator Torque(Num torque) => new(torque);
     public static Torque operator *(Torque t, Num n) => new(t.totalTorque * n);
 }
-
-public struct Change
-    {
-
-        public Change() {}
-
-        public static implicit operator Vect(Change force) => Vect.Zero;
-    }

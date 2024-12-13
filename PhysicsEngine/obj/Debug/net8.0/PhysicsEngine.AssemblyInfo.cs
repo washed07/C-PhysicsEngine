@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PhysicsEngine")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4f44610fff898a4daaeba12f4998609dad8ab775")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0b1159b012fa9820bb1071f291f3314bc4aadc4d")]
 [assembly: System.Reflection.AssemblyProductAttribute("PhysicsEngine")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PhysicsEngine")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

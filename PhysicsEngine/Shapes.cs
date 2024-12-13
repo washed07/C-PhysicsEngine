@@ -58,7 +58,13 @@ public struct Shape
 
 }
 
-
+public static class Extensions 
+{
+    public static float ToRadians(this float degrees)
+    {
+        return degrees * MathF.PI / 180f;
+    }
+}
 
 public class Polygon(Vect[] vertices, Vect position = default)
 {
@@ -108,14 +114,14 @@ public class Polygon(Vect[] vertices, Vect position = default)
 
     public void Rotate(Num angle, Vect pivot = default)
     {
-        Rotation = angle;
+        Rotation = angle.Radians();  // Convert degrees to radians
         if (pivot != default)
         {
             Pivot = pivot;
         }
         else
         {
-            Pivot = (0, 0);
+            Pivot = GetCentroid();
         }
     }
 
@@ -256,6 +262,37 @@ public class Polygon(Vect[] vertices, Vect position = default)
         return (triangleMass * (a * a + b * b + c * c)) / 36.0;
     }
 
+    public Vect GetEdgeAtPoint(Vect point)
+    {
+        var vertices = TransformedVertices();
+        var minDistSq = float.MaxValue;
+        Vect edge = default;
+
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            var v1 = vertices[i];
+            var v2 = vertices[(i + 1) % vertices.Length];
+            
+            // Calculate point-to-line-segment distance squared
+            var lineVec = v2 - v1;
+            var pointVec = point - v1;
+            var lineLengthSq = lineVec.SqrMagnitude();
+            
+            // Project point onto line segment
+            var t = Num.Max(0, Num.Min(1, Vect.Dot(pointVec, lineVec) / lineLengthSq));
+            var projection = v1 + lineVec * t;
+            var distSq = Vect.DistanceSqr(point, projection);
+
+            if (distSq < minDistSq)
+            {
+                minDistSq = distSq;
+                edge = Vect.Normalize(lineVec);
+            }
+        }
+
+        return edge;
+    }
+
 }
 
 public static class Collision
@@ -318,4 +355,4 @@ public static class Collision
 
         return new MTV(smallestAxis, minOverlap, collisionPoint);
     }
-}
+} 

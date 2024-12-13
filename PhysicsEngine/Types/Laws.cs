@@ -10,7 +10,7 @@ namespace Forces;
 
 public class F
 {
-    public static Force Gravity(Particle particle, Num gravity, Vect direction) => new(new Vect(gravity, gravity) * direction); // Gravity
+    public static Force Gravity(Num gravity, Vect direction) => new(new Vect(gravity, gravity) * direction); // Gravity
 
     public static Force Attraction (Particle particle, Particle _particle) // Mutual Attraction
     {
@@ -104,22 +104,20 @@ public class F
         return new (force);
     }
 
-    public static void Collision (Particle particle, Particle otherParticle, Vect collisionPoint) 
+    public static void Collision (Particle particle, Particle otherParticle, Vect collisionPoint, Force gravity) 
     {
         Particle x0 = particle;
         Particle x1 = otherParticle;
 
-        Vect edge = x1.GetEdgeAtPoint(collisionPoint);
-        Vect n = new Vect(-edge.y, edge.x);
-        n = Vect.Normalize(n);
+        Vect edge = x1.polygon.GetEdgeAtPoint(collisionPoint);
+        Vect dir = edge.Perpendicular();  // Remove the sine multiplication
 
-        Num e = 1f;
+        Num e = 1f;  // Coefficient of restitution (0.5 = semi-elastic)
 
         Num rap = Vect.Distance(x0.position + x0.Centroid, collisionPoint);
         Num rbp = Vect.Distance(x1.position + x1.Centroid, collisionPoint);
 
         Num ma = x0.mass;
-
         Num Ia = x0.Inertia;
 
         Vect va1 = x0.velocity;
@@ -129,7 +127,6 @@ public class F
         Num wb1 = x1.angularVelocity;
 
         Vect vap1 = va1 + wa1 * rap;
-
         Vect vp1 = va1 + wa1 * rap - vb1 - wb1 * rbp;
 
         Vect j;
@@ -139,28 +136,40 @@ public class F
             Num mb = x1.mass;
             Num Ib = x1.Inertia;
 
-            j = (-(1 + e) * vp1 * n) / (1/ma + 1/mb + ((rap * n) * (rap * n)) / Ia + ((rbp * n) * (rbp * n)) / Ib);
+            j = (-(1 + e) * Vect.Dot(vp1, dir) * dir) / (1/ma + 1/mb + ((rap * dir) * (rap * dir)) / Ia + ((rbp * dir) * (rbp * dir)) / Ib);
         }
         else
         {
-            j = (-(1 + e) * vap1 * n) / ((1/ma + ((rap * n) * (rap * n))) / Ia);
+            j = (-(1 + e) * Vect.Dot(vap1, dir) * dir) / ((1/ma + ((rap * dir) * (rap * dir))) / Ia);
         }
 
         particle.acceleration = Vect.Zero;
         particle.angularAcceleration = 0;
 
-        Vect va2 = va1 - j * n / ma;
-        
-        particle.velocity = va2;
+        // Calculate new velocity without eliminating tangential component
+        Vect va2 = va1 + j / ma;
+        x0.velocity = va2 * edge;  // Don't multiply by dir
 
-        Num wa2 = wa1 + (rap * Vect.Dot(j, n)) / Ia;
-        //Num wb2 = wb1 - (rbp * (j * n)) / Ib;
-
+        Num wa2 = wa1 + (rap * Vect.Dot(j, dir)) / Ia;
         x0.angularVelocity = wa2;
-
-        Console.WriteLine($"==============\n edge: {edge}\n n: {n}\n e: {e}\n rap: {rap}\n rbp: {rbp}\n ma: {ma}\n Ia: {Ia}\n va1: {va1}\n vb1: {vb1}\n wa1: {wa1}\n wb1: {wb1}\n vap1: {vap1}\n vp1: {vp1}\n j: {j}\n Final Velocity: {va2}\n dem: {((1/ma + ((rap * n) * (rap * n))) / Ia)}==============");
-
     } 
+
+    public static Force n(Particle particle, Vect edge)
+    {
+        // Normal force
+        // Fn = Fg * cos(theta)
+        // Fn = Gravity * cos(theta)
+        // explanation:
+        // Fn: normal force
+        // Fg: gravitational force
+        // theta: angle between the normal and the gravitational force
+
+        Vect dir = edge.Perpendicular();
+        Num slant = Math.Sin(edge.x);
+        Vect g = particle.velocity.Perpendicular() * slant;
+        Console.WriteLine(Math.Sin(edge.x));
+        return new(g * dir);
+    }
 
     private static Num Theta = Math.PI/4;
     private static Num aVel = 0;

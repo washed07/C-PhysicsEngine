@@ -31,6 +31,9 @@ namespace Types
 
         public static Num n(Num value) => new(value);
 
+        public Num Radians() => new(value * (Num)Math.PI / 180);
+        public Num Degrees() => new(value * 180 / (Num)Math.PI);
+
         // Implicit conversions
         public static implicit operator Num(byte value) => FromT(value);
         public static implicit operator Num(int value) => FromT(value);
