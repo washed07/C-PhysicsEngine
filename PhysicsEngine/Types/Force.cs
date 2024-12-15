@@ -1,32 +1,25 @@
-using System;
-
 namespace Types;
 
-public struct Force
+public struct Force(Vect force)
 {
-    public Vect totalForce; // Total force
+    private readonly Vect _totalForce = force; // Total force
 
-    public Force(Vect Force)
-    {
-        totalForce = Force;
-    }
+    public static implicit operator Vect(Force force) { return force._totalForce; }
 
-    public static implicit operator Vect(Force force) => force.totalForce;
-    public static implicit operator Force(Vect force) => new(force);
-    public static Force operator *(Force f, Num n) => new(f.totalForce * n);
-    public static Force operator *(Force f, Double d) => new(f.totalForce * d);
+    public static implicit operator Force(Vect force) { return new Force(force); }
+
+    public static Force operator *(Force f, Num n) { return new Force(f._totalForce * n); }
+
+    public static Force operator *(Force f, double d) { return new Force(f._totalForce * d); }
 }
 
-public struct Torque
+public struct Torque(Num torque)
 {
-    public Num totalTorque;
+    private readonly Num _totalTorque = torque;
 
-    public Torque(Num Torque)
-    {
-        totalTorque = Torque;
-    }
+    public static implicit operator Num(Torque torque) { return torque._totalTorque; }
 
-    public static implicit operator Num(Torque torque) => torque.totalTorque;
-    public static implicit operator Torque(Num torque) => new(torque);
-    public static Torque operator *(Torque t, Num n) => new(t.totalTorque * n);
+    public static implicit operator Torque(Num torque) { return new Torque(torque); }
+
+    public static Torque operator *(Torque t, Num n) { return new Torque(t._totalTorque * n); }
 }

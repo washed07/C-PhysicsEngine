@@ -1,178 +1,153 @@
 ﻿using System;
-using System.Linq;
 using Shapes;
 using Types;
 
-namespace Physics.Particles;
+namespace Particles;
 
 // Represents a particle in the physics engine
 public class Particle
 {
-    public Polygon polygon; // Texture of the particle
-    public Num radius;
-    public Physics.Laws laws; // Laws applied to the particle (Global, Local, etc.)
-    public Num lifeTime; // Total Life span
-    public Num age; // Current age
-    public Vect position;
-    public Num rotation;
-    public Vect pivot = (0, 0);
-    public Vect velocity;
-    public Num angularVelocity;
-    public Vect acceleration; 
-    public Num angularAcceleration;
-    public Num mass;
-    public Num damping = 0.9995f; // Damping factor
+    public readonly  Polygon Polygon;   // Texture of the particle
+    private readonly Num     _lifeTime; // Total Life span
+    private          Num     _age;      // Current age
+    public           Vect    Position;
+    public           Num     Rotation;
+    private readonly Vect    _pivot;
+    public           Vect    Velocity;
+    public           Num     AngVelocity;
+    public           Vect    Acceleration;
+    public           Num     Torque;
+    public           Num     Mass;
+    private readonly Num     _damping = 0.9995f; // Damping factor
 
     // Properties
-    public Vect Centroid => polygon.GetCentroid();
-    public Num Inertia => Polygon.CalculateMomentOfInertia(polygon.Vertices, mass);
+    public Vect Centroid => Polygon.GetCentroid();
+    public Num  Inertia  => Polygon.CalculateMomentOfInertia(Polygon.Vertices, Mass);
 
     // Constructor to initialize the particle
-    public Particle(Polygon Polygon, Physics.Laws Laws, Num LifeTime, Num Radius, Num Mass, Vect Position, Num Damping, Vect InitalVelocity = default)
+    public Particle(Polygon polygon, Num lifeTime, Num mass, Vect position, Vect initialVelocity = default(Vect))
     {
-        polygon = Polygon;
-        laws = Laws;
-        lifeTime = LifeTime;
-        radius = Radius;
-        mass = Mass;
-        position = Position;
-        polygon.Position = position;
-        pivot = polygon.GetCentroid();
-        velocity = InitalVelocity;
+        Polygon = polygon;
+        _lifeTime = lifeTime;
+        Mass = mass;
+        Position = position;
+        Polygon.Position = Position;
+        _pivot = Polygon.GetCentroid();
+        Velocity = initialVelocity;
     }
 
     // Initialize the particle (empty for now)
-    public void Initialize() {}
+    public void Initialize() { }
 
     // Load the content (texture) for the particle
-    public void LoadContent() {}
+    public void LoadContent() { }
 
     // Integrate the particle's motion over time
     public void Integrate(Engine engine)
     {
-        age += Engine.TimeStep;
-        if (age >= lifeTime && lifeTime >= 0) 
+        _age += Engine.TimeStep;
+        if (_age >= _lifeTime && _lifeTime >= 0)
         {
             engine.AgedParticles.Add(this); // Mark particle for removal if its age exceeds its lifetime
             return;
         }
 
-
-        velocity += acceleration * Engine.TimeStep;
-        angularVelocity += angularAcceleration * Engine.TimeStep;
-
-        velocity *= damping;
-        angularVelocity *= damping;
-
-        position += velocity * Engine.TimeStep;
-        rotation += angularVelocity * Engine.TimeStep;
-
-        acceleration = Vect.Zero;
-        angularAcceleration = 0;
+        Velocity += Acceleration * Engine.TimeStep;
+        AngVelocity += Torque * Engine.TimeStep;
+        Velocity *= _damping;
+        AngVelocity *= _damping;
+        Position += Velocity * Engine.TimeStep;
+        Rotation += AngVelocity * Engine.TimeStep;
+        Acceleration = Vect.Zero;
+        Torque = 0;
     }
 
     // Apply a force to the particle
-    public void Impose(Vect force)
+    public void Impose(Vect force)       { Acceleration += force / Mass; }
+    public void ImposeAngular(Num force) { Torque += force / Mass; }
+
+    public void Update()
     {
-        acceleration += force / mass;
+        Polygon.Position = Position;
+        Polygon.Rotate(Rotation, _pivot);
     }
 
-    public void ImposeAngular(Num force)
-    {
-        angularAcceleration += force / mass;
-    }
-
-    public void Update() {polygon.Position = position; polygon.Rotate(rotation, pivot);}
-
-    public bool IsMassInf()
-    {
-        if (mass > 0 && mass < 1e10) {return false;} else {return true;}
-    }
-
-    public Vect getPivotTo(Vect point)
-    {
-        return point - position;
-    }
-    
+    public bool IsMassInf()            { return Mass <= 0 || Mass >= 1e10; }
+    public Vect GetPivotTo(Vect point) { return point - Position; }
 }
 
 // Represents an accumulator that emits particles
-public class Accumulator
+public class Accumulator(Engine engine, Vect position)
 {
-    private readonly Engine _Engine; // Reference to the engine
-    public Vect position; // Position of the accumulator
-    public Physics.Laws laws; // Laws applied to emitted particles
-
-    // Constructor to initialize the accumulator
-    public Accumulator(Engine Engine, Vect Position, Physics.Laws Laws = Physics.Laws.Global)
-    {
-        _Engine = Engine;
-        position = Position;
-        laws = Laws;
-    }
-
-    public Num radius; // Radius of emitted particles
-    public Num amount; // Amount of particles to emit
-    public Num currentAmount; // Current amount of particles emitted
-    public Num lifeTime; // Lifetime of emitted particles
-    public Vect vel; // Velocity of emitted particles
+    // Reference to the engine
+    // Position of the accumulator
+    public  Num  CurrentAmount; // Current amount of particles emitted
+    private Num  _lifeTime;     // Lifetime of emitted particles
+    private Vect _vel;          // Velocity of emitted particles
 
     // Emit particles with specified properties
     public void Emit
     (
-        bool IsRandom, // required
-        Num Amount, // required
+        bool isRandom, // required
+        Num amount,    // required
         Polygon polygon,
-        Num Mass, // required
-        Num Radius = default,
-        Num LifeTime = default, // Particle life time
-        Num MaxLife = default,
-        Num MinLife = default,
-        Vect Vel = default, // Velocity
-        Num MaxVelx = default, 
-        Num MaxVely = default,
-        Num MinVelx = default,
-        Num MinVely = default
-        
+        Num mass, // required
+        Num radius = default(Num),
+        Num lifeTime = default(Num), // Particle life time
+        Num maxLife = default(Num),
+        Num minLife = default(Num),
+        Vect vel = default(Vect), // Velocity
+        Num maxVelx = default(Num),
+        Num maxVely = default(Num),
+        Num minVelx = default(Num),
+        Num minVely = default(Num)
     )
-    {   
-        if (currentAmount < Amount)
+    {
+        if (CurrentAmount >= amount) { return; }
+
+        if (isRandom)
         {
-            if (IsRandom == true) 
+            Random random = new Random();
+            if (radius == 0) { random.Next(2, 10); }
+
+            if (lifeTime == 0)
             {
-                Random random = new Random();
-                if (Radius == 0) {radius = random.Next(2, 10);} else {radius = Radius;}
-                if (LifeTime == 0)
-                {
-                    Num Max;
-                    Num Min;
-                    if (MaxLife != 0) {Max = MaxLife;} else {Max = 5f;}
-                    if (MinLife != 0) {Min = MinLife;} else {Min = 1f;}
-                    lifeTime = random.Next(Min, Max);
-                } else {lifeTime = LifeTime;}
-                if (Vel == (0, 0, 0)) 
-                {
-                    Num MaxX;
-                    Num MinX;
-                    Num MaxY;
-                    Num MinY;
-                    if (MaxVelx != 0) {MaxX = MaxVelx;} else {MaxX = 100;}
-                    if (MinVelx != 0) {MinX = MinVelx;} else {MinX = -100;}
-                    if (MaxVely != 0) {MaxY = MaxVely;} else {MaxY = 100;}
-                    if (MinVely != 0) {MinY = MinVely;} else {MinY = -100;}
-                    vel = (random.Next(MinX, MaxX), random.Next(MinY, MaxY));
-                } else {vel = Vel;}
-            }
-            CreateParticle(polygon, Mass, radius, lifeTime, vel);
-            currentAmount++;
+                Num Max;
+                Num Min;
+                if (maxLife != 0) { Max = maxLife; } else { Max = 5f; }
+
+                if (minLife != 0) { Min = minLife; } else { Min = 1f; }
+
+                _lifeTime = random.Next(Min, Max);
+            } else { _lifeTime = lifeTime; }
+
+            if (vel == (0, 0, 0))
+            {
+                Num MaxX;
+                Num MinX;
+                Num MaxY;
+                Num MinY;
+                if (maxVelx != 0) { MaxX = maxVelx; } else { MaxX = 100; }
+
+                if (minVelx != 0) { MinX = minVelx; } else { MinX = -100; }
+
+                if (maxVely != 0) { MaxY = maxVely; } else { MaxY = 100; }
+
+                if (minVely != 0) { MinY = minVely; } else { MinY = -100; }
+
+                _vel = (random.Next(MinX, MaxX), random.Next(MinY, MaxY));
+            } else { _vel = vel; }
         }
+
+        CreateParticle(polygon, mass, _lifeTime, _vel);
+        CurrentAmount++;
     }
 
     // Create a new particle and add it to the engine
-    public void CreateParticle(Polygon polygon, Num Mass, Num Radius, Num LifeTime, Vect Vel)
+    private void CreateParticle(Polygon polygon, Num mass, Num lifeTime, Vect vel)
     {
-        Particle particle = new Particle(polygon, laws, LifeTime, Radius, Mass, position, 1f, Vel);
+        Particle particle = new Particle(polygon, lifeTime, mass, position, vel);
         particle.LoadContent();
-        _Engine.Particles.Add(particle);
+        engine.Particles.Add(particle);
     }
 }
