@@ -2,50 +2,37 @@
 using System.Collections.Generic;
 using System.Linq;
 using Forces;
-using Shapes;
 using Types;
 
-namespace Particles;
+namespace Objects;
 
 // Represents the physics engine
 public class Engine
 {
-    private const  int            Tps        = 60;                           // Ticks per second
-    private const  float          Speed      = 1f;                           // Speed factor
-    private const  int            Iterations = 1;                            // Number of iterations per update
-    public static  float          TimeStep => 1f / Tps / Iterations * Speed; // Time step for each update
-    private        float          Timer    { get; set; }                     // Timer for updates
-    private        float          Runtime  { get; set; }                     // Total runtime
-    private        Accumulator    _accumulator;                              // Particle accumulator
-    public         List<Particle> Particles     { get; set; } = [];          // List of particles
-    public         List<Particle> AgedParticles { get; set; } = [];          // List of particles to be removed
-    private static Physics        _physics;                                  // Physics handler
+    private const  int            Tps        = 60; // Ticks per second
+    private const  float          Speed      = 1f; // Speed factor
+    private const  int            Iterations = 1; // Number of iterations per update
+    private static Physics        _physics; // Physics handler
+    public static  float          TimeStep      => 1f / Tps / Iterations * Speed; // Time step for each update
+    private        float          Timer         { get; set; } // Timer for updates
+    private        float          Runtime       { get; set; } // Total runtime// Particle accumulator
+    public         List<Particle> Particles     { get; set; } = []; // List of particles
+    public         List<Particle> AgedParticles { get; set; } = []; // List of particles to be removed
 
     // Initialize the engine
-    public void Initialize()
+    public void Initialize() // Initialize the engine
     {
         _physics = new Physics(this);
-        Particle platform = new Particle(Shape.Square(20, 20), -1f, 1f, (400, 400), restitution: 1);
-        Particle box      = new Particle(Shape.Square(20,  20), -1f, 1f,  (500, 200), restitution: 1);
-        _accumulator = new Accumulator(this, (500, 500));
-        Particles.Add(platform);
-        Particles.Add(box);
-        //Particles.Add(new Particle(Shape.Square(20, 20), Motion.Static, Laws.None, -1f, 10f, 10000f, (500, 300), 1f));
-        //Particles.Add(new Particle(Shape.Square(20, 20), Motion.Static, Laws.None, -1f, 10f, 100f, (500, 500), 1f));
         foreach (Particle particle in Particles) { particle.Initialize(); }
-
-        box.Rotation      = 0f;
-        platform.Rotation = 0f;
     }
 
     // Load content for all particles
-    public void LoadContent()
+    public void LoadContent() // Load content for all particles
     {
-        foreach (Particle particle in Particles) { particle.LoadContent(); }
+        foreach (Particle particle in Particles) { particle.LoadContent(); } // Load content for each particle
     }
 
-    // Update the engine
-    public void Update(float dt)
+    public void Update(float dt) // Update the engine
     {
         Timer += dt;
         if (!(Timer > TimeStep)) { return; }
@@ -54,7 +41,7 @@ public class Engine
         Runtime += TimeStep;
         for (int _Iteration = 0; _Iteration < Iterations; _Iteration++) { _physics.Tick(); }
 
-        foreach (Particle particle in Particles)
+        foreach (Particle particle in Particles) // Integrate particle physics
         {
             particle.Integrate(this);
             particle.Update();
@@ -63,8 +50,8 @@ public class Engine
         foreach (Particle particle in AgedParticles)
         {
             Particles.Remove(particle);
-            _accumulator.CurrentAmount--; // TODO: automate this within the accumulator
-        }
+            //_accumulator.CurrentAmount--; // TODO: automate this within the accumulator
+        } // Remove aged particles
 
         AgedParticles.Clear();
     }
@@ -73,10 +60,9 @@ public class Engine
 // Handles physics calculations
 public class Physics(Engine engine)
 {
-    private readonly Force _gravity = F.Gravity(100f, Vect.Down);
+    private readonly Force _gravity = F.Gravity(100f, Vector.Down);
 
-    // Perform physics calculations for each time step
-    public void Tick()
+    public void Tick() // perform physics calculations
     {
         foreach (Particle particle in engine.Particles.Where(particle => !particle.IsMassInf()))
         {
@@ -86,7 +72,8 @@ public class Physics(Engine engine)
         }
     }
 
-    private List<Particle> GetOtherParticles(Particle excludedParticle)
+    private List<Particle> GetOtherParticles
+        (Particle excludedParticle) // Get all particles except the excluded particle
     {
         List<Particle> Particles = [];
         Particles.AddRange(engine.Particles.Where(otherParticle => otherParticle != excludedParticle));
@@ -94,7 +81,11 @@ public class Physics(Engine engine)
         return Particles;
     }
 
-    public void UsingOtherParticles(Particle excludedParticle, Action<Particle, Particle> function)
+    public void UsingOtherParticles
+    (
+        Particle                   excludedParticle,
+        Action<Particle, Particle> function
+    ) // Perform an action on all particles using the excluded particle
     {
         foreach (Particle otherParticle in GetOtherParticles(excludedParticle))
         {
@@ -102,16 +93,20 @@ public class Physics(Engine engine)
         }
     }
 
-    public void UsingOtherParticles(Particle excludedParticle, Action<Particle> function)
+    public void UsingOtherParticles
+    (
+        Particle         excludedParticle,
+        Action<Particle> function
+    ) // Perform an action on all particles except the excluded particle
     {
         foreach (Particle otherParticle in GetOtherParticles(excludedParticle)) { function(otherParticle); }
     }
 
-    private void ResolveCollisions(Particle particle)
+    private void ResolveCollisions(Particle particle) // Resolve collisions between particles
     {
         foreach (Particle otherParticle in GetOtherParticles(particle))
         {
-            Collision.MTV collision = Collision.Resolve(particle.Polygon, otherParticle.Polygon);
+            Collision.Mtv collision = Collision.Resolve(particle.Polygon, otherParticle.Polygon);
             if (collision != null) { F.Impulse(particle, otherParticle, collision.Point); }
         }
     }
