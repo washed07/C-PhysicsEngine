@@ -4,24 +4,24 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Particles;
+using Objects;
 using Types;
 
 namespace Core;
 
 public class Main : Game
 {
-    private readonly GraphicsDeviceManager _graphics;
-    private          SpriteBatch           _spriteBatch;
     private readonly Engine                _engine = new Engine(); // The physics Engine
-    private          Texture2D             _whiteTexture;
+    private readonly GraphicsDeviceManager _graphics;
     private          BasicEffect           _basicEffect; // BasicEffect for drawing polygons
-    private          VertexBuffer          _vertexBuffer;
-    private          IndexBuffer           _indexBuffer;
-    private          int                   _maxVertices = 1000; // Adjust based on expected maximum vertices
-    private          int                   _maxIndices  = 3000; // Adjust based on expected maximum indices
-    private          SpriteFont            _font;               // Font for displaying the framerate
+    private          SpriteFont            _font;        // Font for displaying the framerate
     private          double                _frameRate;
+    private          IndexBuffer           _indexBuffer;
+    private          int                   _maxIndices  = 3000; // Adjust based on expected maximum indices
+    private          int                   _maxVertices = 1000; // Adjust based on expected maximum vertices
+    private          SpriteBatch           _spriteBatch;
+    private          VertexBuffer          _vertexBuffer;
+    private          Texture2D             _whiteTexture;
 
     public Main()
     {
@@ -111,8 +111,10 @@ public class Main : Game
         // Collect vertices and indices for all particles
         foreach (Particle particle in _engine.Particles)
         {
-            try { AddPolygonVertices(particle, vertexList, indexList, Color.White); }
-            catch (Exception ex) { Console.WriteLine($"An error occurred while drawing the polygon: {ex.Message}"); }
+            try { AddPolygonVertices(particle, vertexList, indexList, Color.White); } catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while drawing the polygon: {ex.Message}");
+            }
         }
 
         // Update buffers and draw polygons if there are any vertices and indices
@@ -131,14 +133,13 @@ public class Main : Game
                     pass.Apply();
                     GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indexList.Count / 3);
                 }
-            }
-            catch (Exception ex) { Console.WriteLine($"Buffer error: {ex.Message}"); }
+            } catch (Exception ex) { Console.WriteLine($"Buffer error: {ex.Message}"); }
         }
 
         // Draw the outlines of the polygons
         _spriteBatch.Begin();
-        foreach (Vect[] transformedVerts in _engine.Particles.Select
-                     (particle => particle.Polygon.TransformedVertices()))
+        foreach (Vector[] transformedVerts in _engine.Particles.Select
+            (particle => particle.Polygon.TransformedVertices()))
         {
             for (int i = 0; i < transformedVerts.Length; i++)
             {
@@ -158,8 +159,8 @@ public class Main : Game
     private static void AddPolygonVertices
         (Particle particle, List<VertexPositionColor> vertexList, List<int> indexList, Color fillColor)
     {
-        Vect[] vertices  = particle.Polygon.TransformedVertices();
-        int    baseIndex = vertexList.Count;
+        Vector[] vertices  = particle.Polygon.TransformedVertices();
+        int      baseIndex = vertexList.Count;
         vertexList.AddRange(vertices.Select(t => new VertexPositionColor(new Vector3(t, 0), fillColor)));
         for (int i = 0; i < vertices.Length - 2; i++)
         {
@@ -177,15 +178,15 @@ public class Main : Game
         Vector2 edge  = end - start;
         float   angle = (float)Math.Atan2(edge.Y, edge.X);
         spriteBatch.Draw
-            (
-             texture,
-             new Rectangle((int)start.X, (int)start.Y, (int)edge.Length(), 1),
-             null,
-             color,
-             angle,
-             Vector2.Zero,
-             SpriteEffects.None,
-             0
-            );
+        (
+            texture,
+            new Rectangle((int)start.X, (int)start.Y, (int)edge.Length(), 1),
+            null,
+            color,
+            angle,
+            Vector2.Zero,
+            SpriteEffects.None,
+            0
+        );
     }
 }

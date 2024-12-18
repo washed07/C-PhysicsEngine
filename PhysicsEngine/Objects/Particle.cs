@@ -1,41 +1,46 @@
-﻿using System;
-using Shapes;
-using Types;
+﻿using Types;
 
-namespace Particles;
+namespace Objects;
 
 // Represents a particle in the physics engine
 public class Particle
 {
-    public readonly  Polygon Polygon;   // Texture of the particle
-    private readonly Num     _lifeTime; // Total Life span
-    private          Num     _age;      // Current age
-    public           Vect    Position;
-    public           Num     Rotation;
-    private          Vect    _pivot;
-    public           Vect    Velocity;
-    public           Num     AngVelocity;
-    public           Vect    Acceleration;
-    public           Num     Torque;
-    public           Num     Mass;
-    public           Num     Restitution; // Coefficient of restitution
-    private readonly Num     _damping = 0.995f; // Damping factor
-
-    // Properties
-    public Vect Centroid => Polygon.GetCentroid();
-    public Num  Inertia  => Polygon.CalculateMomentOfInertia(Polygon.Vertices, Mass);
+    private readonly num     _damping = 0.995f; // Damping factor
+    private readonly num     _lifeTime;         // Total Life span
+    public readonly  Polygon Polygon;           // Texture of the particle
+    private          Vector  _acceleration;
+    private          num     _age; // Current age
+    private          Vector  _pivot;
+    private          num     _rotation;
+    private          num     _torque;
+    public           num     AngVelocity;
+    public           num     Mass;
+    public           Vector  Position;
+    public           num     Restitution; // Coefficient of restitution
+    public           Vector  Velocity;
 
     // Constructor to initialize the particle
-    public Particle(Polygon polygon, Num lifeTime, Num mass, Vect position, Vect initialVelocity = default(Vect), Num restitution = default(Num))
+    public Particle
+    (
+        Polygon polygon,
+        num     lifeTime,
+        num     mass,
+        Vector  position,
+        Vector  initialVelocity = default(Vector),
+        num     restitution     = default(num)
+    )
     {
-        Polygon   = polygon;
-        _lifeTime = lifeTime;
-        Mass      = mass;
-        Position  = position + this.Centroid;
-        Velocity  = initialVelocity;
+        Polygon     = polygon;
+        _lifeTime   = lifeTime;
+        Mass        = mass;
+        Position    = position + this.Centroid;
+        Velocity    = initialVelocity;
         Restitution = restitution;
-        this.Initialize();
     }
+
+    // Properties
+    public Vector Centroid => Polygon.GetCentroid();
+    public num    Inertia  => Polygon.CalculateMomentOfInertia(Polygon.Vertices, Mass);
 
     // Initialize the particle (empty for now)
     public void Initialize()
@@ -44,7 +49,7 @@ public class Particle
         _pivot           = Polygon.GetCentroid();
     }
 
-    // Load the content (texture) for the particle
+    // Load the content of the particle (empty for now)
     public void LoadContent() { }
 
     // Integrate the particle's motion over time
@@ -57,32 +62,32 @@ public class Particle
             return;
         }
 
-        Velocity += Acceleration * Engine.TimeStep;
-        AngVelocity += Torque * Engine.TimeStep;
-        Velocity *= _damping;
-        AngVelocity *= _damping;
-        Position += Velocity * Engine.TimeStep;
-        Rotation += AngVelocity * Engine.TimeStep;
-        Acceleration = Vect.Zero;
-        Torque = 0;
+        Velocity      += _acceleration * Engine.TimeStep;
+        AngVelocity   += _torque       * Engine.TimeStep;
+        Velocity      *= _damping;
+        AngVelocity   *= _damping;
+        Position      += Velocity    * Engine.TimeStep;
+        _rotation     += AngVelocity * Engine.TimeStep;
+        _acceleration =  Vector.Zero;
+        _torque       =  0;
     }
 
     // Apply a force to the particle
-    public void Impose(Vect force)       { Acceleration += force / Mass; }
-    public void ImposeAngular(Num force) { Torque += force / Mass; }
+    public void Impose(Vector     force) { _acceleration += force / Mass; }
+    public void ImposeAngular(num force) { _torque       += force / Mass; }
 
     public void Update()
     {
         Polygon.Position = Position;
-        Polygon.Rotate(Rotation, _pivot);
+        Polygon.Rotate(_rotation, _pivot);
     }
 
-    public bool IsMassInf()            { return Mass <= 0 || Mass >= 1e10; }
-    public Vect GetPivotTo(Vect point) { return point - Position; }
+    public bool   IsMassInf()              { return Mass <= 0 || Mass >= 1e10; }
+    public Vector GetPivotTo(Vector point) { return point - Position; }
 }
 
 // Represents an accumulator that emits particles
-public class Accumulator(Engine engine, Vect position)
+/*public class Accumulator(Engine engine, Vect position)
 {
     // Reference to the engine
     // Position of the accumulator
@@ -155,4 +160,4 @@ public class Accumulator(Engine engine, Vect position)
         particle.LoadContent();
         engine.Particles.Add(particle);
     }
-}
+}*/
