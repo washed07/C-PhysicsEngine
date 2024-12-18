@@ -29,10 +29,18 @@ public static class F
         Num r = Vect.Distance(particle.Position, otherParticle.Position); // Distance between particles
         if (r < 100) { r = 100; } // Capped distance to prevent spikes in force at close range        
 
-        Vect n     = Vect.Normalize(otherParticle.Position - particle.Position); // Direction (Sin(theta), Cos(theta))      
-        Num  G     = 6.67430e-11f;                                           // Gravitational constant
-        Num  force = G * (m1 * m2) / (r * r);                                // Total force     
-        return new Force(n         * force);
+        Vect n = Vect.Normalize(otherParticle.Position - particle.Position); // Direction (Sin(theta), Cos(theta))      
+        Num  G = 6.67430e-11f; // Gravitational constant
+        Num  force = G * (m1 * m2) / (r * r); // Total force     
+        return new Force(n * force);
+    }
+    
+    public static Force FakeAttraction(Particle particle, Particle otherParticle, Force gravity) // Mutual Attraction
+    {
+
+        Vect n = Vect.Normalize(otherParticle.Position - particle.Position); // Direction (Sin(theta), Cos(theta))
+        Num  force = gravity._totalForce.Magnitude(); // Total force     
+        return new Force(n * force);
     }
 
     public static Force GCursor(Particle particle, Num strength)
@@ -75,7 +83,7 @@ public static class F
         Num d = 0.5f;           // Damping factor 
 
         // Dependents
-        Vect T = otherParticle.Position;                  // Anchor position
+        Vect T = otherParticle.Position;              // Anchor position
         Num  L = Vect.Distance(particle.Position, T); // Length of spring
         Num  S = L - R;                               // Stretch of spring
         Vect p = particle.Position;                   // Position of particle
@@ -129,40 +137,49 @@ public static class F
         return new Force(F * n);
     }
 
-    public static void Collision(Particle particle, Particle otherParticle, Vect collisionPoint, Force gravity)
+    public static void Impulse(Particle particleA, Particle particleB, Vect collisionPoint)
     { // TODO: Fix not working at certain angles
-        Particle x0   = particle;
-        Particle x1   = otherParticle;
-        Vect     edge = x1.Polygon.GetEdgeAtPoint(collisionPoint);
-        Vect     dir  = edge.Perpendicular(); // Remove the sine multiplication
-        Num      e    = 1f;                   // Coefficient of restitution (0.5 = semi-elastic)
-        Num      rap  = Vect.Distance(x0.Position + x0.Centroid, collisionPoint);
-        Num      rbp  = Vect.Distance(x1.Position + x1.Centroid, collisionPoint);
-        Num      ma   = x0.Mass;
-        Num      Ia   = x0.Inertia;
-        Vect     va1  = x0.Velocity;
-        Vect     vb1  = x1.Velocity;
-        Num      wa1  = x0.AngVelocity;
-        Num      wb1  = x1.AngVelocity;
-        Vect     vap1 = va1             + wa1       * rap;
-        Vect     vp1  = va1 + wa1 * rap - vb1 - wb1 * rbp;
-        Vect     j;
-        if (!x1.IsMassInf())
+        Num Mₐ = particleA.Mass;
+        Num Mᵦ = particleB.Mass;
+
+        //Num Iₐ = particleA.Inertia;
+        //Num Iᵦ = particleB.Inertia;
+
+        Vect vₐᵢ = particleA.Velocity;
+        Vect vᵦᵢ = particleB.Velocity;
+
+        Vect Vᵣ = vᵦᵢ - vₐᵢ;
+        if (Vᵣ < Vect.Zero) { return; }
+
+        //Num ωₐᵢ = particleA.AngVelocity;
+        //Num ωᵦᵢ = particleB.AngVelocity;
+
+        //Vect rₐ = particleA.Position - collisionPoint;
+        //Vect rᵦ = particleB.Position - collisionPoint;
+
+        Vect n = particleB.Polygon.GetEdgeAtPoint(collisionPoint).Normalize();
+        Num  e = Num.Min(particleA.Restitution, particleB.Restitution); // Coefficient of restitution
+
+        //Vect vₐₚ = vₐᵢ + ωₐᵢ * rₐ;
+        //Vect vᵦₚ = vᵦᵢ + ωᵦᵢ * rᵦ;
+
+        //Vect vₚ = vₐᵢ + vₐᵢ * rₐ - vᵦᵢ - ωᵦᵢ * rᵦ;
+
+        Num j;
+        
+        if (particleB.IsMassInf()) {j = -(1 + e) * Vect.Dot(Vᵣ, n) / (1/Mₐ);} else
         {
-            Num mb = x1.Mass;
-            Num Ib = x1.Inertia;
-            j = -(1 + e) * Vect.Dot(vp1, dir) * dir /
-                (1 / ma + 1 / mb + rap * dir * (rap * dir) / Ia + rbp * dir * (rbp * dir) / Ib);
-        } else { j = -(1 + e) * Vect.Dot(vap1, dir) * dir / ((1 / ma + rap * dir * (rap * dir)) / Ia); }
+            j = -(1 + e) * Vect.Dot(Vᵣ, n) / ((1/Mₐ) + (1/Mᵦ));
+        }
 
-        particle.Acceleration = Vect.Zero;
-        particle.Torque       = 0;
+        Vect vₐ = vₐᵢ + j * n / Mₐ;
+        Vect vᵦ = vᵦᵢ - j * n / Mᵦ;
 
-        // Calculate new velocity without eliminating tangential component
-        Vect va2 = va1 + j / ma;
-        x0.Velocity = va2 * edge; // Don't multiply by dir
-        Num wa2 = wa1 + rap * Vect.Dot(j, dir) / Ia;
-        x0.AngVelocity = wa2;
+        //Num ωₐ = ωₐᵢ + Vect.Dot(rₐ, j * n) / Iₐ;
+
+        particleA.Velocity    = vₐ;
+        particleB.Velocity    = vᵦ;
+        //particleA.AngVelocity = ωₐ;
     }
 
     public static Force Normal(Particle particle, Vect edge)
@@ -188,8 +205,8 @@ public static class F
         (Particle particle, Particle otherParticle, Num gravity, Num r, float b = 1) // Anchored Pendulum
     {
         // Constants
-        Num      g  = gravity * particle.Mass;                                 // Gravity
-        Num      R  = r;                                                 // Length
+        Num      g  = gravity * particle.Mass;                            // Gravity
+        Num      R  = r;                                                  // Length
         Particle x0 = otherParticle;                                      // Pivot
         Particle x1 = particle;                                           // Bob
         x1.Torque      =  -g / R    * Math.Sin(_theta) * Engine.TimeStep; // x'' || Acceleration

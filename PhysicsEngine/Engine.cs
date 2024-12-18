@@ -25,8 +25,8 @@ public class Engine
     public void Initialize()
     {
         _physics = new Physics(this);
-        Particle platform = new Particle(Shape.Square(200, 20), -1f, -10, (400, 400));
-        Particle box      = new Particle(Shape.Square(50,  20), -1f, 1f,  (500, 200));
+        Particle platform = new Particle(Shape.Square(20, 20), -1f, 1f, (400, 400), restitution: 1);
+        Particle box      = new Particle(Shape.Square(20,  20), -1f, 1f,  (500, 200), restitution: 1);
         _accumulator = new Accumulator(this, (500, 500));
         Particles.Add(platform);
         Particles.Add(box);
@@ -35,7 +35,7 @@ public class Engine
         foreach (Particle particle in Particles) { particle.Initialize(); }
 
         box.Rotation      = 0f;
-        platform.Rotation = 40f;
+        platform.Rotation = 0f;
     }
 
     // Load content for all particles
@@ -80,7 +80,8 @@ public class Physics(Engine engine)
     {
         foreach (Particle particle in engine.Particles.Where(particle => !particle.IsMassInf()))
         {
-            particle.Impose(F.Gravity(100f, Vect.Down));
+            UsingOtherParticles(particle, (p1, p2) => particle.Impose(F.FakeAttraction(p1, p2, _gravity)));
+            //particle.Impose(_gravity);
             ResolveCollisions(particle);
         }
     }
@@ -111,7 +112,7 @@ public class Physics(Engine engine)
         foreach (Particle otherParticle in GetOtherParticles(particle))
         {
             Collision.MTV collision = Collision.Resolve(particle.Polygon, otherParticle.Polygon);
-            if (collision != null) { F.Collision(particle, otherParticle, collision.Point, _gravity); }
+            if (collision != null) { F.Impulse(particle, otherParticle, collision.Point); }
         }
     }
 }

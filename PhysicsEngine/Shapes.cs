@@ -222,14 +222,14 @@ public class Polygon(Vect[] vertices, Vect position = default(Vect))
         Vect v1 = triangle[1] - triangle[0];
         Vect v2 = triangle[2] - triangle[0];
 
-        return Math.Abs(v1.x * v2.y - v1.y * v2.x) / 2;
+        return Num.Abs(v1.x * v2.y - v1.y * v2.x) / 2;
     }
 
     private static double CalculateTriangleMomentOfInertia(Vect[] triangle, double triangleMass)
     {
         if (triangle == null || triangle.Length != 3) { throw new ArgumentException("Invalid triangle array"); }
 
-        if (triangleMass <= 0) { throw new ArgumentException("Mass must be positive"); }
+        if (triangleMass <= 0) { return 0; }
 
         // Calculate triangle sides
         double a = Vector2.Distance(triangle[0], triangle[1]);
@@ -269,7 +269,7 @@ public class Polygon(Vect[] vertices, Vect position = default(Vect))
             if (distSq < minDistSq)
             {
                 minDistSq = distSq;
-                edge      = Vect.Normalize(lineVec);
+                edge      = lineVec;
             }
         }
 

@@ -51,9 +51,11 @@ public struct Vect(Num x, Num y, Num z = default(Num), Num w = default(Num)) : I
 
         return vector / mag;
     }
+    
+    public Vect Normalize() { return Normalize(this); }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly Vect Perpendicular() { return new Vect(-y, x, z, w); }
+    public readonly Vect Perpendicular() { return new Vect(y, -x, z, w); }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vect operator -(Vect a) { return new Vect(-a.x, -a.y, -a.z, -a.w); }

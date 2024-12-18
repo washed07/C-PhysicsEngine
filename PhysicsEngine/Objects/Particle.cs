@@ -12,32 +12,37 @@ public class Particle
     private          Num     _age;      // Current age
     public           Vect    Position;
     public           Num     Rotation;
-    private readonly Vect    _pivot;
+    private          Vect    _pivot;
     public           Vect    Velocity;
     public           Num     AngVelocity;
     public           Vect    Acceleration;
     public           Num     Torque;
     public           Num     Mass;
-    private readonly Num     _damping = 0.9995f; // Damping factor
+    public           Num     Restitution; // Coefficient of restitution
+    private readonly Num     _damping = 0.995f; // Damping factor
 
     // Properties
     public Vect Centroid => Polygon.GetCentroid();
     public Num  Inertia  => Polygon.CalculateMomentOfInertia(Polygon.Vertices, Mass);
 
     // Constructor to initialize the particle
-    public Particle(Polygon polygon, Num lifeTime, Num mass, Vect position, Vect initialVelocity = default(Vect))
+    public Particle(Polygon polygon, Num lifeTime, Num mass, Vect position, Vect initialVelocity = default(Vect), Num restitution = default(Num))
     {
-        Polygon = polygon;
+        Polygon   = polygon;
         _lifeTime = lifeTime;
-        Mass = mass;
-        Position = position;
-        Polygon.Position = Position;
-        _pivot = Polygon.GetCentroid();
-        Velocity = initialVelocity;
+        Mass      = mass;
+        Position  = position + this.Centroid;
+        Velocity  = initialVelocity;
+        Restitution = restitution;
+        this.Initialize();
     }
 
     // Initialize the particle (empty for now)
-    public void Initialize() { }
+    public void Initialize()
+    {
+        Polygon.Position = Position;
+        _pivot           = Polygon.GetCentroid();
+    }
 
     // Load the content (texture) for the particle
     public void LoadContent() { }

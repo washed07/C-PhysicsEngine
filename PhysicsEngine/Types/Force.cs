@@ -2,7 +2,7 @@ namespace Types;
 
 public struct Force(Vect force)
 {
-    private readonly Vect _totalForce = force; // Total force
+    public readonly Vect _totalForce = force; // Total force
 
     public static implicit operator Vect(Force force) { return force._totalForce; }
 
